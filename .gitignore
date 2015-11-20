@@ -1,2 +1,3 @@
-raw/*.csv
 raw/*.txt
+raw/g*.csv
+output/*
