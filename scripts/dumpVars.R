@@ -31,6 +31,10 @@ for (table in tables) {
     remove(vars, table)
 }
 
+# Duplication problems - have not traced down source, but this will correct it
+setkey(data, `Variable Code`, `Table ID`, `Table Name`, `Variable Name`)
+data <- unique(data)
+
 # Write to File
 write.table(
     data,

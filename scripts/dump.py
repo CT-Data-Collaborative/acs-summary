@@ -2,6 +2,12 @@ from csv import reader, DictReader, writer, DictWriter
 from os import path
 from sys import argv, exit
 
+def num(val):
+    try:
+        return int(val)
+    except ValueError:
+        return float(val)
+
 # Get input from argv
 try:
     searchTable = argv[1]
@@ -20,7 +26,7 @@ except AssertionError:
 # some file name constants
 filenames = {
     "lookup" : "Sequence_Number_and_Table_Number_Lookup.csv",
-    "geography" : "g20135ct.csv",
+    "geography" : "g20145ct.csv",
     "cols" : "tableVars.csv"
 }
 
@@ -90,7 +96,9 @@ tableShell = []
 with open(path.join(rawDir, filenames["lookup"])) as lookupFile:
     lookupReader = DictReader(lookupFile)
     tableShell = [{k:v.strip() for k, v in row.iteritems()} for row in lookupReader if row["Table ID"].strip() == searchTable]
-
+    if len(tableShell) == 0:
+        print("no table shell found!")
+        exit()
 
 # print("* Shell *")
 # for t in tableShell:
@@ -130,7 +138,7 @@ with open(path.join(rawDir, filenames["cols"])) as colFile:
 seq = tableShell[0]["Sequence Number"].zfill(4)
 
 #estimate file
-eFile = "e20135ct" + seq +"000.txt"
+eFile = "e20145ct" + seq +"000.txt"
 with open(path.join(rawDir, eFile)) as eFile:
     eReader = reader(eFile)
     eData = [row for row in eReader]
@@ -141,7 +149,7 @@ with open(path.join(rawDir, eFile)) as eFile:
 # print("**")
 
 #moe file
-mFile = "m20135ct" + seq +"000.txt"
+mFile = "m20145ct" + seq +"000.txt"
 with open(path.join(rawDir, mFile)) as mFile:
     mReader = reader(mFile)
     mData = [row for row in mReader]
@@ -155,7 +163,7 @@ startPos = int(tableShell[0]["Start Position"]) - 1
 # print("* Start Position *")
 # print(startPos)
 # print("**")
-endPos = (len(tableShell) - 2) + startPos
+endPos = (len([t for t in tableShell[2:] if num(t["Line Number"]) >= 1])) + startPos
 # print("* End Position *")
 # print(endPos)
 # print("**")
@@ -178,7 +186,7 @@ for town in towns:
     # now iterate and alternate estimates and moes, based on cell positions
     for p in positions:
         row.append(rowEst[p])
-        row.append(rowMoe[p] if int(rowMoe[p]) != -1 else ".") # MOE coded as -1 are actually suppressions/nonexistant, so recode accordingly
+        row.append(rowMoe[p] if (rowMoe[p] != '.' and num(rowMoe[p]) != -1) else ".") # MOE coded as -1 are actually suppressions/nonexistant, so recode accordingly
 
     townData.append(row)
 
@@ -200,7 +208,7 @@ for county in counties:
     countyData.append(row)
 
 # write files
-outputFileName = "ACS_13_5YR_"+ searchTable +"_with_ann.csv"
+outputFileName = "ACS_14_5YR_"+ searchTable +"_with_ann.csv"
 with open(path.join(outputDir, "Town", outputFileName), "w") as outputFile:
     townWriter = writer(outputFile)
     townWriter.writerow(header)
